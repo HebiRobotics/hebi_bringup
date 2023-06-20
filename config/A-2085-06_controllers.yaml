@@ -8,7 +8,7 @@ controller_manager:
     forward_position_controller:              # delete entry if controller is not applicable
       type: forward_command_controller/ForwardCommandController
 
-    joint_trajectory_controller:              # delete entry if controller is not applicable
+    hebi_arm_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
 forward_position_controller:                  # delete entry if controller is not applicable
@@ -22,7 +22,7 @@ forward_position_controller:                  # delete entry if controller is no
       - J6_wrist3
     interface_name: position
 
-joint_trajectory_controller:                  # delete entry if controller is not applicable
+hebi_arm_controller:
   ros__parameters:
     joints:
       - J1_base
