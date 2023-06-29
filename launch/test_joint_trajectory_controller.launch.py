@@ -17,18 +17,30 @@
 #
 
 from launch import LaunchDescription
-from launch.substitutions import PathJoinSubstitution
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import PathJoinSubstitution, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
+
+    # config file argument
+    config_file_arg = DeclareLaunchArgument(
+        "config_file",
+        default_value="test_goal_publishers_config.yaml",
+        description="Name of the config file to use for the test.",
+    )
+
+    config_file = LaunchConfiguration("config_file")
+
     position_goals = PathJoinSubstitution(
-        [FindPackageShare("hebi_bringup"), "config", "test_goal_publishers_config.yaml"]
+        [FindPackageShare("hebi_bringup"), "config", config_file]
     )
 
     return LaunchDescription(
         [
+            config_file_arg,
             Node(
                 package="ros2_controllers_test_nodes",
                 executable="publisher_joint_trajectory_controller",

@@ -23,6 +23,9 @@ from launch.substitutions import Command, FindExecutable, LaunchConfiguration, P
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+
 
 def generate_launch_description():
     # Declare arguments
@@ -69,7 +72,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "use_mock_hardware",
-            default_value="true",
+            default_value="false",
             description="Start robot with mock hardware mirroring command to its states.",
         )
     )
@@ -116,33 +119,28 @@ def generate_launch_description():
     families = LaunchConfiguration("families")
     names = LaunchConfiguration("names")
 
+    gazebo = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [PathJoinSubstitution([FindPackageShare("gazebo_ros"), "launch", "gazebo.launch.py"])]
+        ),
+        launch_arguments={"verbose": "true"}.items(),
+    )
+
     # Get URDF via xacro
     robot_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution(
-                [FindPackageShare(description_package), "urdf", "kits", description_file]
+                [FindPackageShare(description_package), "urdf", "kits", "ros2_control", description_file]
             ),
             " ",
             "prefix:=",
             prefix,
             " ",
-            "use_mock_hardware:=",
-            use_mock_hardware,
-            " ",
-            "mock_sensor_commands:=",
-            mock_sensor_commands,
-            " ",
-            "families:=",
-            families,
-            " ",
-            "names:=",
-            names,
-            " ",
-            "config_pkg:=",
-            description_package,
-            " ",
+            "use_mock_hardware:=false ",
+            "sim_gazebo:=true ",
+            "mock_sensor_commands:=false ",
         ]
     )
 
@@ -152,7 +150,7 @@ def generate_launch_description():
         [FindPackageShare(runtime_config_package), "config", controllers_file]
     )
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare(description_package), "rviz", "A-2085-06.rviz"]
+        [FindPackageShare(description_package), "rviz", "hebi_arm.rviz"]
     )
 
     control_node = Node(
@@ -175,6 +173,14 @@ def generate_launch_description():
         arguments=["-d", rviz_config_file],
     )
 
+    spawn_entity = Node(
+        package="gazebo_ros",
+        executable="spawn_entity.py",
+        name="spawn_robot",
+        arguments=["-topic", "robot_description", "-entity", "A-2085-06"],
+        output="screen",
+    )
+
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
@@ -192,7 +198,7 @@ def generate_launch_description():
             )
         ]
 
-    inactive_robot_controller_names = ["add_some_controller_name"]
+    inactive_robot_controller_names = []
     inactive_robot_controller_spawners = []
     for controller in inactive_robot_controller_names:
         inactive_robot_controller_spawners += [
@@ -209,7 +215,7 @@ def generate_launch_description():
             target_action=control_node,
             on_start=[
                 TimerAction(
-                    period=3.0,
+                    period=1.0,
                     actions=[joint_state_broadcaster_spawner],
                 ),
             ],
@@ -229,7 +235,7 @@ def generate_launch_description():
                 )
             )
         ]
-
+    
     # Delay start of inactive_robot_controller_names after other controllers
     delay_inactive_robot_controller_spawners_after_joint_state_broadcaster_spawner = []
     for i, controller in enumerate(inactive_robot_controller_spawners):
@@ -249,9 +255,11 @@ def generate_launch_description():
         + [
             control_node,
             robot_state_pub_node,
-            rviz_node,
+            # rviz_node,
+            gazebo,
+            spawn_entity,
             delay_joint_state_broadcaster_spawner_after_ros2_control_node,
         ]
         + delay_robot_controller_spawners_after_joint_state_broadcaster_spawner
-        # + delay_inactive_robot_controller_spawners_after_joint_state_broadcaster_spawner
+        + delay_inactive_robot_controller_spawners_after_joint_state_broadcaster_spawner
     )
