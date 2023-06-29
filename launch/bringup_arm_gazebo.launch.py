@@ -17,19 +17,25 @@
 #
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, RegisterEventHandler, TimerAction
+from launch.actions import DeclareLaunchArgument, RegisterEventHandler, TimerAction, LogInfo, SetLaunchConfiguration, IncludeLaunchDescription
 from launch.event_handlers import OnProcessExit, OnProcessStart
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
-from launch.actions import IncludeLaunchDescription
+from launch.conditions import LaunchConfigurationEquals
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
 def generate_launch_description():
     # Declare arguments
     declared_arguments = []
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "hebi_arm",
+            description="Name of the robot to be used.",
+        )
+    )
     declared_arguments.append(
         DeclareLaunchArgument(
             "runtime_config_package",
@@ -41,7 +47,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "controllers_file",
-            default_value="A-2085-06_controllers.yaml",
+            default_value="None", # Default set later using the hebi arm name
             description="YAML file with the controllers configuration.",
         )
     )
@@ -56,54 +62,46 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "description_file",
-            default_value="A-2085-06.urdf.xacro",
+            default_value="None", # Default set later using the hebi arm name
             description="URDF/XACRO description file with the robot.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "prefix",
-            default_value='""',
-            description="Prefix of the joint names, useful for \
-        multi-robot setup. If changed then also joint names in the controllers' configuration \
-        have to be updated.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "use_mock_hardware",
-            default_value="false",
-            description="Start robot with mock hardware mirroring command to its states.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "mock_sensor_commands",
-            default_value="false",
-            description="Enable mock command interfaces for sensors used for simple simulations. \
-            Used only if 'use_mock_hardware' parameter is true.",
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
             "robot_controller",
             default_value="hebi_arm_controller",
-            choices=["forward_position_controller", "hebi_arm_controller"],
+            choices=["hebi_arm_controller"],
             description="Robot controller to start.",
         )
     )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "families",
-            default_value="HEBI_Arm",
-            description="List of families of HEBI components to connect to",
+
+    # Set default values for arguments
+    default_arguments = []
+    default_arguments.append(
+        LogInfo(
+            msg=PythonExpression(['"Using default controllers_file: ', LaunchConfiguration("hebi_arm"), '_controllers.yaml"']),
+            condition=LaunchConfigurationEquals("controllers_file", "None")
         )
     )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "names",
-            default_value="J1_base;J2_shoulder;J3_elbow;J4_wrist1;J5_wrist2;J6_wrist3",
-            description="List of names of HEBI components to connect to",
+    default_arguments.append(
+        SetLaunchConfiguration(
+            name="controllers_file",
+            value=PythonExpression(['"', LaunchConfiguration("hebi_arm"), '_controllers.yaml"']),
+            condition=LaunchConfigurationEquals("controllers_file", "None")
+        )
+    )
+
+    default_arguments.append(
+        LogInfo(
+            msg=PythonExpression(['"Using default description_file: ', LaunchConfiguration("hebi_arm"), '.urdf.xacro"']),
+            condition=LaunchConfigurationEquals("description_file", "None")
+        )
+    )
+    default_arguments.append(
+        SetLaunchConfiguration(
+            name="description_file",
+            value=PythonExpression(['"', LaunchConfiguration("hebi_arm"), '.urdf.xacro"']),
+            condition=LaunchConfigurationEquals("description_file", "None")
         )
     )
 
@@ -112,12 +110,7 @@ def generate_launch_description():
     controllers_file = LaunchConfiguration("controllers_file")
     description_package = LaunchConfiguration("description_package")
     description_file = LaunchConfiguration("description_file")
-    prefix = LaunchConfiguration("prefix")
-    use_mock_hardware = LaunchConfiguration("use_mock_hardware")
-    mock_sensor_commands = LaunchConfiguration("mock_sensor_commands")
     robot_controller = LaunchConfiguration("robot_controller")
-    families = LaunchConfiguration("families")
-    names = LaunchConfiguration("names")
 
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -135,12 +128,9 @@ def generate_launch_description():
                 [FindPackageShare(description_package), "urdf", "kits", "ros2_control", description_file]
             ),
             " ",
-            "prefix:=",
-            prefix,
-            " ",
             "use_mock_hardware:=false ",
-            "sim_gazebo:=true ",
             "mock_sensor_commands:=false ",
+            "sim_gazebo:=true",
         ]
     )
 
@@ -235,7 +225,7 @@ def generate_launch_description():
                 )
             )
         ]
-    
+
     # Delay start of inactive_robot_controller_names after other controllers
     delay_inactive_robot_controller_spawners_after_joint_state_broadcaster_spawner = []
     for i, controller in enumerate(inactive_robot_controller_spawners):
@@ -251,11 +241,12 @@ def generate_launch_description():
         ]
 
     return LaunchDescription(
-        declared_arguments
-        + [
+        declared_arguments +
+        default_arguments +
+        [
             control_node,
             robot_state_pub_node,
-            # rviz_node,
+            rviz_node,
             gazebo,
             spawn_entity,
             delay_joint_state_broadcaster_spawner_after_ros2_control_node,
