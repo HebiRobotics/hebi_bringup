@@ -1,3 +1,4 @@
+# Copyright (c) 2023, HEBI Robotics Inc.
 # Copyright (c) 2022, Stogl Robotics Consulting UG (haftungsbeschränkt) (template)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,10 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-#
-# Author: Dr. Denis
-#
+
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, RegisterEventHandler, TimerAction, LogInfo, SetLaunchConfiguration
@@ -33,6 +31,13 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "hebi_arm",
             description="Name of the robot to be used.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "prefix",
+            default_value="",
+            description="Prefix",
         )
     )
     declared_arguments.append(
@@ -68,7 +73,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "use_mock_hardware",
-            default_value="false",
+            default_value="true",
             description="Start robot with mock hardware mirroring command to its states.",
         )
     )
@@ -191,6 +196,7 @@ def generate_launch_description():
 
 
     # Initialize Arguments
+    prefix = LaunchConfiguration("prefix")
     runtime_config_package = LaunchConfiguration("runtime_config_package")
     controllers_file = LaunchConfiguration("controllers_file")
     description_package = LaunchConfiguration("description_package")
@@ -213,6 +219,9 @@ def generate_launch_description():
             PathJoinSubstitution(
                 [FindPackageShare(description_package), "urdf", "kits", "ros2_control", description_file]
             ),
+            " ",
+            "prefix:=",
+            prefix,
             " ",
             "use_mock_hardware:=",
             use_mock_hardware,
@@ -238,6 +247,7 @@ def generate_launch_description():
             "gains_file:=",
             gains_file_path,
             " ",
+            "home_position:=\"0.0;2.09;2.09;0.0;1.57;0.0\""
         ]
     )
 

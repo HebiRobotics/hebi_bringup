@@ -8,13 +8,13 @@ publisher_joint_trajectory_controller:
     goal_time_from_start: 3.0
     goal_names: ["pos1", "pos2", "pos3", "pos4"]
     pos1:
-      positions: [0.8, 2.09439, 2.09439, 1.5707963, 0.0]
+      positions: [0.8, 2.09439, 2.09439, 0.0, 1.5707963, 0.0]
     pos2:
-      positions: [0.0, 2.09439, 2.09439, 1.5707963, 0.8]
+      positions: [0.0, 2.09439, 2.09439, 0.0, 1.5707963, 0.8]
     pos3:
-      positions: [-0.8, 2.09439, 2.09439, 1.5707963, 0.0]
+      positions: [-0.8, 2.09439, 2.09439, 0.0, 1.5707963, 0.0]
     pos4:
-      positions: [0.0, 2.09439, 2.09439, 1.5707963, 0.8]
+      positions: [0.0, 2.09439, 2.09439, 0.0, 1.5707963, 0.8]
 
     joints:
       - J1_base
@@ -22,3 +22,4 @@ publisher_joint_trajectory_controller:
       - J3_elbow
       - J4_wrist1
       - J5_wrist2
+      - J6_wrist3
