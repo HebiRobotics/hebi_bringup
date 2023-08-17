@@ -96,7 +96,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "families",
-            default_value="HEBI_Arm",
+            default_value="Arm",
             description="List of families of HEBI components to connect to",
         )
     )
