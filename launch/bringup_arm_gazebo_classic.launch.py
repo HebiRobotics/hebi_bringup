@@ -15,13 +15,14 @@
 
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, RegisterEventHandler, TimerAction, LogInfo, SetLaunchConfiguration
+from launch.actions import DeclareLaunchArgument, RegisterEventHandler, TimerAction, LogInfo, SetLaunchConfiguration, IncludeLaunchDescription
 from launch.event_handlers import OnProcessExit, OnProcessStart
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 from launch.conditions import LaunchConfigurationEquals
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
 def generate_launch_description():
@@ -31,13 +32,6 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "hebi_arm",
             description="Name of the robot to be used.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "prefix",
-            default_value="",
-            description="Prefix",
         )
     )
     declared_arguments.append(
@@ -72,67 +66,10 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "use_mock_hardware",
-            default_value="true",
-            description="Start robot with mock hardware mirroring command to its states.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "mock_sensor_commands",
-            default_value="false",
-            description="Enable mock command interfaces for sensors used for simple simulations. \
-            Used only if 'use_mock_hardware' parameter is true.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
             "robot_controller",
             default_value="hebi_arm_controller",
             choices=["hebi_arm_controller"],
             description="Robot controller to start.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "families",
-            default_value="Arm",
-            description="List of families of HEBI components to connect to",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "names",
-            default_value="J1_base;J2_shoulder;J3_elbow;J4_wrist1;J5_wrist2;J6_wrist3",
-            description="List of names of HEBI components to connect to",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "hrdf_pkg",
-            default_value="hebi_description",
-            description="Package with the robot's HRDF file.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "hrdf_file_path",
-            default_value="None", # Default set later using the hebi arm name
-            description="Path to the robot's HRDF file relative to the package",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "gains_pkg",
-            default_value="hebi_description",
-            description="Package with the robot's gains file.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "gains_file_path",
-            default_value="None", # Default set later using the hebi arm name
-            description="Path to the robot's gains file relative to the package",
         )
     )
 
@@ -166,50 +103,12 @@ def generate_launch_description():
         )
     )
 
-    default_arguments.append(
-        LogInfo(
-            msg=PythonExpression(['"Using default hrdf_file_path: config/hrdf/', LaunchConfiguration("hebi_arm"), '.hrdf"']),
-            condition=LaunchConfigurationEquals("hrdf_file_path", "None")
-        )
-    )
-    default_arguments.append(
-        SetLaunchConfiguration(
-            name="hrdf_file_path",
-            value=PythonExpression(['"config/hrdf/', LaunchConfiguration("hebi_arm"), '.hrdf"']),
-            condition=LaunchConfigurationEquals("hrdf_file_path", "None")
-        )
-    )
-
-    default_arguments.append(
-        LogInfo(
-            msg=PythonExpression(['"Using default gains_file_path: config/gains/', LaunchConfiguration("hebi_arm"), '_gains.xml"']),
-            condition=LaunchConfigurationEquals("gains_file_path", "None")
-        )
-    )
-    default_arguments.append(
-        SetLaunchConfiguration(
-            name="gains_file_path",
-            value=PythonExpression(['"config/gains/', LaunchConfiguration("hebi_arm"), '_gains.xml"']),
-            condition=LaunchConfigurationEquals("gains_file_path", "None")
-        )
-    )
-
-
     # Initialize Arguments
-    prefix = LaunchConfiguration("prefix")
     runtime_config_package = LaunchConfiguration("runtime_config_package")
     controllers_file = LaunchConfiguration("controllers_file")
     description_package = LaunchConfiguration("description_package")
     description_file = LaunchConfiguration("description_file")
-    use_mock_hardware = LaunchConfiguration("use_mock_hardware")
-    mock_sensor_commands = LaunchConfiguration("mock_sensor_commands")
     robot_controller = LaunchConfiguration("robot_controller")
-    families = LaunchConfiguration("families")
-    names = LaunchConfiguration("names")
-    hrdf_pkg = LaunchConfiguration("hrdf_pkg")
-    hrdf_file_path = LaunchConfiguration("hrdf_file_path")
-    gains_pkg = LaunchConfiguration("gains_pkg")
-    gains_file_path = LaunchConfiguration("gains_file_path")
 
     # Get URDF via xacro
     robot_description_content = Command(
@@ -220,34 +119,10 @@ def generate_launch_description():
                 [FindPackageShare(description_package), "urdf", "kits", "ros2_control", description_file]
             ),
             " ",
-            "prefix:=",
-            prefix,
-            " ",
-            "use_mock_hardware:=",
-            use_mock_hardware,
-            " ",
-            "mock_sensor_commands:=",
-            mock_sensor_commands,
-            " ",
-            "families:=",
-            families,
-            " ",
-            "names:=",
-            names,
-            " ",
-            "hrdf_pkg:=",
-            hrdf_pkg,
-            " ",
-            "hrdf_file:=",
-            hrdf_file_path,
-            " ",
-            "gains_pkg:=",
-            gains_pkg,
-            " ",
-            "gains_file:=",
-            gains_file_path,
-            " ",
-            "home_position:=\"0.0;2.09;2.09;0.0;1.57;0.0\"" # HEBI hardware interface ignores extra joints if unnecessary
+            "use_mock_hardware:=false ",
+            "mock_sensor_commands:=false ",
+            "sim_gazebo_classic:=true ",
+            "sim_gazebo:=false",
         ]
     )
 
@@ -278,6 +153,21 @@ def generate_launch_description():
         name="rviz2",
         output="log",
         arguments=["-d", rviz_config_file],
+    )
+
+    gazebo = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [PathJoinSubstitution([FindPackageShare("gazebo_ros"), "launch", "gazebo.launch.py"])]
+        ),
+        launch_arguments={"verbose": "true"}.items(),
+    )
+
+    spawn_entity = Node(
+        package="gazebo_ros",
+        executable="spawn_entity.py",
+        name="spawn_robot",
+        arguments=["-topic", "robot_description", "-entity", "A-2085-06"],
+        output="screen",
     )
 
     joint_state_broadcaster_spawner = Node(
@@ -356,6 +246,8 @@ def generate_launch_description():
             control_node,
             robot_state_pub_node,
             rviz_node,
+            gazebo,
+            spawn_entity,
             delay_joint_state_broadcaster_spawner_after_ros2_control_node,
         ]
         + delay_robot_controller_spawners_after_joint_state_broadcaster_spawner

@@ -110,13 +110,6 @@ def generate_launch_description():
     description_file = LaunchConfiguration("description_file")
     robot_controller = LaunchConfiguration("robot_controller")
 
-    gazebo = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [PathJoinSubstitution([FindPackageShare("gazebo_ros"), "launch", "gazebo.launch.py"])]
-        ),
-        launch_arguments={"verbose": "true"}.items(),
-    )
-
     # Get URDF via xacro
     robot_description_content = Command(
         [
@@ -128,6 +121,7 @@ def generate_launch_description():
             " ",
             "use_mock_hardware:=false ",
             "mock_sensor_commands:=false ",
+            "sim_gazebo_classic:=false ",
             "sim_gazebo:=true",
         ]
     )
@@ -161,11 +155,18 @@ def generate_launch_description():
         arguments=["-d", rviz_config_file],
     )
 
+    gazebo = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [PathJoinSubstitution([FindPackageShare('ros_gz_sim'), 'launch', 'gz_sim.launch.py'])]
+        ),
+        launch_arguments={"gz_args": " -r -v 4 empty.sdf"}.items(),
+    )
+
     spawn_entity = Node(
-        package="gazebo_ros",
-        executable="spawn_entity.py",
+        package="ros_gz_sim",
+        executable="create",
         name="spawn_robot",
-        arguments=["-topic", "robot_description", "-entity", "A-2085-06"],
+        arguments=["-topic", "robot_description", "-name", "A-2085-06"],
         output="screen",
     )
 

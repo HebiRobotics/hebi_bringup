@@ -1,5 +1,8 @@
 publisher_joint_trajectory_controller:
   ros__parameters:
+    # This is a yaml file that contains the parameters for the test_goal_publisher node 
+    # Currently, it is made for 6-DOF HEBI arm
+    # You can change the parameters to match your robot's configuration
 
     controller_name: "hebi_arm_controller"
     wait_sec_between_publish: 4
