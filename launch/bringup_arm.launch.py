@@ -17,11 +17,11 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, RegisterEventHandler, TimerAction, LogInfo, SetLaunchConfiguration
 from launch.event_handlers import OnProcessExit, OnProcessStart
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, PythonExpression
+from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, PythonExpression, EqualsSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
-from launch.conditions import LaunchConfigurationEquals
+from launch.conditions import IfCondition
 
 
 def generate_launch_description():
@@ -141,56 +141,72 @@ def generate_launch_description():
     default_arguments.append(
         LogInfo(
             msg=PythonExpression(['"Using default controllers_file: ', LaunchConfiguration("hebi_arm"), '_controllers.yaml"']),
-            condition=LaunchConfigurationEquals("controllers_file", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("controllers_file"), "None")
+            )
         )
     )
     default_arguments.append(
         SetLaunchConfiguration(
             name="controllers_file",
             value=PythonExpression(['"', LaunchConfiguration("hebi_arm"), '_controllers.yaml"']),
-            condition=LaunchConfigurationEquals("controllers_file", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("controllers_file"), "None")
+            )
         )
     )
 
     default_arguments.append(
         LogInfo(
             msg=PythonExpression(['"Using default description_file: ', LaunchConfiguration("hebi_arm"), '.urdf.xacro"']),
-            condition=LaunchConfigurationEquals("description_file", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("description_file"), "None")
+            )
         )
     )
     default_arguments.append(
         SetLaunchConfiguration(
             name="description_file",
             value=PythonExpression(['"', LaunchConfiguration("hebi_arm"), '.urdf.xacro"']),
-            condition=LaunchConfigurationEquals("description_file", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("description_file"), "None")
+            )
         )
     )
 
     default_arguments.append(
         LogInfo(
             msg=PythonExpression(['"Using default hrdf_file_path: config/hrdf/', LaunchConfiguration("hebi_arm"), '.hrdf"']),
-            condition=LaunchConfigurationEquals("hrdf_file_path", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("hrdf_file_path"), "None")
+            )
         )
     )
     default_arguments.append(
         SetLaunchConfiguration(
             name="hrdf_file_path",
             value=PythonExpression(['"config/hrdf/', LaunchConfiguration("hebi_arm"), '.hrdf"']),
-            condition=LaunchConfigurationEquals("hrdf_file_path", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("hrdf_file_path"), "None")
+            )
         )
     )
 
     default_arguments.append(
         LogInfo(
             msg=PythonExpression(['"Using default gains_file_path: config/gains/', LaunchConfiguration("hebi_arm"), '_gains.xml"']),
-            condition=LaunchConfigurationEquals("gains_file_path", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("gains_file_path"), "None")
+            )
         )
     )
     default_arguments.append(
         SetLaunchConfiguration(
             name="gains_file_path",
             value=PythonExpression(['"config/gains/', LaunchConfiguration("hebi_arm"), '_gains.xml"']),
-            condition=LaunchConfigurationEquals("gains_file_path", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("gains_file_path"), "None")
+            )
         )
     )
 
