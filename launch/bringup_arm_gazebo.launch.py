@@ -72,6 +72,13 @@ def generate_launch_description():
             description="Robot controller to start.",
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_rviz",
+            default_value="true",
+            description="Whether to start RViz.",
+        )
+    )
 
     # Set default values for arguments
     default_arguments = []
@@ -156,6 +163,7 @@ def generate_launch_description():
         parameters=[robot_description],
     )
     rviz_node = Node(
+        condition=IfCondition(LaunchConfiguration("use_rviz")),
         package="rviz2",
         executable="rviz2",
         name="rviz2",
