@@ -95,6 +95,13 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            "use_rviz",
+            default_value="true",
+            description="Whether to start RViz.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "families",
             default_value="Arm",
             description="List of families of HEBI components to connect to",
@@ -289,6 +296,9 @@ def generate_launch_description():
         parameters=[robot_description],
     )
     rviz_node = Node(
+        condition=IfCondition(
+            EqualsSubstitution(LaunchConfiguration("use_rviz"), "true")
+        ),
         package="rviz2",
         executable="rviz2",
         name="rviz2",
