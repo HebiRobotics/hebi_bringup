@@ -189,14 +189,14 @@ def generate_launch_description():
 
     default_arguments.append(
         LogInfo(
-            msg=PythonExpression(['"Using default gains_file_path: config/gains/', LaunchConfiguration("hebi_arm"), '_gains.xml"']),
+            msg=PythonExpression(['"Using default gains_file_path: config/gains/', LaunchConfiguration("hebi_arm"), '.xml"']),
             condition=LaunchConfigurationEquals("gains_file_path", "None")
         )
     )
     default_arguments.append(
         SetLaunchConfiguration(
             name="gains_file_path",
-            value=PythonExpression(['"config/gains/', LaunchConfiguration("hebi_arm"), '_gains.xml"']),
+            value=PythonExpression(['"config/gains/', LaunchConfiguration("hebi_arm"), '.xml"']),
             condition=LaunchConfigurationEquals("gains_file_path", "None")
         )
     )
