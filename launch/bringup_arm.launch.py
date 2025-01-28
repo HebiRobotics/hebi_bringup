@@ -155,7 +155,7 @@ def generate_launch_description():
 
     default_arguments.append(
         LogInfo(
-            msg=PythonExpression(['"Using default config_file_path: config/', LaunchConfiguration("hebi_arm"), '.cfg.yaml"']),
+            msg=PythonExpression(['"Using default config_file_path: config/arms/', LaunchConfiguration("hebi_arm"), '.cfg.yaml"']),
             condition=IfCondition(
                 EqualsSubstitution(LaunchConfiguration("config_file_path"), "None")
             )
@@ -164,7 +164,7 @@ def generate_launch_description():
     default_arguments.append(
         SetLaunchConfiguration(
             name="config_file_path",
-            value=PythonExpression(['"config/', LaunchConfiguration("hebi_arm"), '.cfg.yaml"']),
+            value=PythonExpression(['"config/arms/', LaunchConfiguration("hebi_arm"), '.cfg.yaml"']),
             condition=IfCondition(
                 EqualsSubstitution(LaunchConfiguration("config_file_path"), "None")
             )
