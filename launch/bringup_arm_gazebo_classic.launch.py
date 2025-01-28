@@ -36,7 +36,7 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "runtime_config_package",
+            "controllers_package",
             default_value="hebi_bringup",
             description='Package with the controller\'s configuration in "config" folder. \
         Usually the argument is not set, it enables use of a custom setup.',
@@ -111,7 +111,7 @@ def generate_launch_description():
     )
 
     # Initialize Arguments
-    runtime_config_package = LaunchConfiguration("runtime_config_package")
+    controllers_package = LaunchConfiguration("controllers_package")
     controllers_file = LaunchConfiguration("controllers_file")
     description_package = LaunchConfiguration("description_package")
     description_file = LaunchConfiguration("description_file")
@@ -136,7 +136,7 @@ def generate_launch_description():
     robot_description = {"robot_description": robot_description_content}
 
     robot_controllers = PathJoinSubstitution(
-        [FindPackageShare(runtime_config_package), "config", controllers_file]
+        [FindPackageShare(controllers_package), "config", controllers_file]
     )
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare(description_package), "rviz", "hebi_arm.rviz"]
