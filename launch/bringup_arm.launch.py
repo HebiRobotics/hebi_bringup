@@ -17,11 +17,11 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, RegisterEventHandler, TimerAction, LogInfo, SetLaunchConfiguration
 from launch.event_handlers import OnProcessExit, OnProcessStart
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, PythonExpression
+from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, PythonExpression, EqualsSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
-from launch.conditions import LaunchConfigurationEquals
+from launch.conditions import IfCondition
 
 
 def generate_launch_description():
@@ -120,42 +120,54 @@ def generate_launch_description():
     default_arguments.append(
         LogInfo(
             msg=PythonExpression(['"Using default controllers_file: ', LaunchConfiguration("hebi_arm"), '_controllers.yaml"']),
-            condition=LaunchConfigurationEquals("controllers_file", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("controllers_file"), "None")
+            )
         )
     )
     default_arguments.append(
         SetLaunchConfiguration(
             name="controllers_file",
             value=PythonExpression(['"', LaunchConfiguration("hebi_arm"), '_controllers.yaml"']),
-            condition=LaunchConfigurationEquals("controllers_file", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("controllers_file"), "None")
+            )
         )
     )
 
     default_arguments.append(
         LogInfo(
             msg=PythonExpression(['"Using default description_file: ', LaunchConfiguration("hebi_arm"), '.urdf.xacro"']),
-            condition=LaunchConfigurationEquals("description_file", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("description_file"), "None")
+            )
         )
     )
     default_arguments.append(
         SetLaunchConfiguration(
             name="description_file",
             value=PythonExpression(['"', LaunchConfiguration("hebi_arm"), '.urdf.xacro"']),
-            condition=LaunchConfigurationEquals("description_file", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("description_file"), "None")
+            )
         )
     )
 
     default_arguments.append(
         LogInfo(
             msg=PythonExpression(['"Using default config_file_path: config/', LaunchConfiguration("hebi_arm"), '.cfg.yaml"']),
-            condition=LaunchConfigurationEquals("config_file_path", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("config_file_path"), "None")
+            )
         )
     )
     default_arguments.append(
         SetLaunchConfiguration(
             name="config_file_path",
             value=PythonExpression(['"config/', LaunchConfiguration("hebi_arm"), '.cfg.yaml"']),
-            condition=LaunchConfigurationEquals("config_file_path", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("config_file_path"), "None")
+            )
         )
     )
 
@@ -220,7 +232,7 @@ def generate_launch_description():
         parameters=[robot_description],
     )
     rviz_node = Node(
-        condition=LaunchConfigurationEquals("use_rviz", "true"),
+        condition=IfCondition(LaunchConfiguration("use_rviz")),
         package="rviz2",
         executable="rviz2",
         name="rviz2",

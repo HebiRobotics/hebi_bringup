@@ -1,11 +1,11 @@
 from moveit_configs_utils import MoveItConfigsBuilder
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction, LogInfo, SetLaunchConfiguration
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression, EqualsSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
-from launch.conditions import LaunchConfigurationEquals
+from launch.conditions import IfCondition
 
 
 def generate_moveit_nodes(context, *args, **kwargs):
@@ -91,14 +91,18 @@ def generate_launch_description():
     default_arguments.append(
         LogInfo(
             msg=PythonExpression(['"Using default description_file: ', LaunchConfiguration("hebi_arm"), '.urdf.xacro"']),
-            condition=LaunchConfigurationEquals("description_file", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration('description_file'), "None")
+            )
         )
     )
     default_arguments.append(
         SetLaunchConfiguration(
             name="description_file",
             value=PythonExpression(['"', LaunchConfiguration("hebi_arm"), '.urdf.xacro"']),
-            condition=LaunchConfigurationEquals("description_file", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration('description_file'), "None")
+            )
         )
     )
 
