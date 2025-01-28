@@ -136,7 +136,6 @@ def generate_launch_description():
             " ",
             "use_mock_hardware:=false ",
             "mock_sensor_commands:=false ",
-            "sim_gazebo_classic:=false ",
             "sim_gazebo:=true",
         ]
     )
