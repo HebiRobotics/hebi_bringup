@@ -36,21 +36,6 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "controllers_package",
-            default_value="hebi_bringup",
-            description='Package with the controller\'s configuration in "config" folder. \
-        Usually the argument is not set, it enables use of a custom setup.',
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "controllers_file",
-            default_value="None", # Default set later using the hebi arm name
-            description="YAML file with the controllers configuration.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
             "description_package",
             default_value="hebi_description",
             description="Description package with robot URDF/xacro files. Usually the argument \
@@ -84,20 +69,6 @@ def generate_launch_description():
     default_arguments = []
     default_arguments.append(
         LogInfo(
-            msg=PythonExpression(['"Using default controllers_file: ', LaunchConfiguration("hebi_arm"), '_controllers.yaml"']),
-            condition=LaunchConfigurationEquals("controllers_file", "None")
-        )
-    )
-    default_arguments.append(
-        SetLaunchConfiguration(
-            name="controllers_file",
-            value=PythonExpression(['"', LaunchConfiguration("hebi_arm"), '_controllers.yaml"']),
-            condition=LaunchConfigurationEquals("controllers_file", "None")
-        )
-    )
-
-    default_arguments.append(
-        LogInfo(
             msg=PythonExpression(['"Using default description_file: ', LaunchConfiguration("hebi_arm"), '.urdf.xacro"']),
             condition=LaunchConfigurationEquals("description_file", "None")
         )
@@ -111,8 +82,6 @@ def generate_launch_description():
     )
 
     # Initialize Arguments
-    controllers_package = LaunchConfiguration("controllers_package")
-    controllers_file = LaunchConfiguration("controllers_file")
     description_package = LaunchConfiguration("description_package")
     description_file = LaunchConfiguration("description_file")
     robot_controller = LaunchConfiguration("robot_controller")
@@ -135,19 +104,10 @@ def generate_launch_description():
 
     robot_description = {"robot_description": robot_description_content}
 
-    robot_controllers = PathJoinSubstitution(
-        [FindPackageShare(controllers_package), "config", controllers_file]
-    )
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare(description_package), "rviz", "hebi_arm.rviz"]
     )
 
-    control_node = Node(
-        package="controller_manager",
-        executable="ros2_control_node",
-        output="both",
-        parameters=[robot_description, robot_controllers],
-    )
     robot_state_pub_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
@@ -174,7 +134,7 @@ def generate_launch_description():
         package="gazebo_ros",
         executable="spawn_entity.py",
         name="spawn_robot",
-        arguments=["-topic", "robot_description", "-entity", "A-2085-06"],
+        arguments=["-topic", "robot_description", "-entity", LaunchConfiguration("hebi_arm")],
         output="screen",
     )
 
@@ -205,19 +165,6 @@ def generate_launch_description():
                 arguments=[controller, "-c", "/controller_manager", "--inactive"],
             )
         ]
-
-    # Delay loading and activation of `joint_state_broadcaster` after start of ros2_control_node
-    delay_joint_state_broadcaster_spawner_after_ros2_control_node = RegisterEventHandler(
-        event_handler=OnProcessStart(
-            target_action=control_node,
-            on_start=[
-                TimerAction(
-                    period=1.0,
-                    actions=[joint_state_broadcaster_spawner],
-                ),
-            ],
-        )
-    )
 
     # Delay loading and activation of robot_controller_names after `joint_state_broadcaster`
     delay_robot_controller_spawners_after_joint_state_broadcaster_spawner = []
@@ -251,12 +198,11 @@ def generate_launch_description():
         declared_arguments +
         default_arguments +
         [
-            control_node,
             robot_state_pub_node,
             rviz_node,
             gazebo,
             spawn_entity,
-            delay_joint_state_broadcaster_spawner_after_ros2_control_node,
+            joint_state_broadcaster_spawner,
         ]
         + delay_robot_controller_spawners_after_joint_state_broadcaster_spawner
         + delay_inactive_robot_controller_spawners_after_joint_state_broadcaster_spawner
