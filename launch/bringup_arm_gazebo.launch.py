@@ -36,21 +36,6 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "controllers_package",
-            default_value="hebi_bringup",
-            description='Package with the controller\'s configuration in "config" folder. \
-        Usually the argument is not set, it enables use of a custom setup.',
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "controllers_file",
-            default_value="None", # Default set later using the hebi arm name
-            description="YAML file with the controllers configuration.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
             "description_package",
             default_value="hebi_description",
             description="Description package with robot URDF/xacro files. Usually the argument \
@@ -84,24 +69,6 @@ def generate_launch_description():
     default_arguments = []
     default_arguments.append(
         LogInfo(
-            msg=PythonExpression(['"Using default controllers_file: ', LaunchConfiguration("hebi_arm"), '_controllers.yaml"']),
-            condition=IfCondition(
-                EqualsSubstitution(LaunchConfiguration("controllers_file"), "None")
-            )
-        )
-    )
-    default_arguments.append(
-        SetLaunchConfiguration(
-            name="controllers_file",
-            value=PythonExpression(['"', LaunchConfiguration("hebi_arm"), '_controllers.yaml"']),
-            condition=IfCondition(
-                EqualsSubstitution(LaunchConfiguration("controllers_file"), "None")
-            )
-        )
-    )
-
-    default_arguments.append(
-        LogInfo(
             msg=PythonExpression(['"Using default description_file: ', LaunchConfiguration("hebi_arm"), '.urdf.xacro"']),
             condition=IfCondition(
                 EqualsSubstitution(LaunchConfiguration("description_file"), "None")
@@ -119,8 +86,6 @@ def generate_launch_description():
     )
 
     # Initialize Arguments
-    controllers_package = LaunchConfiguration("controllers_package")
-    controllers_file = LaunchConfiguration("controllers_file")
     description_package = LaunchConfiguration("description_package")
     description_file = LaunchConfiguration("description_file")
     robot_controller = LaunchConfiguration("robot_controller")
@@ -142,19 +107,10 @@ def generate_launch_description():
 
     robot_description = {"robot_description": robot_description_content}
 
-    robot_controllers = PathJoinSubstitution(
-        [FindPackageShare(controllers_package), "config", controllers_file]
-    )
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare(description_package), "rviz", "hebi_arm.rviz"]
     )
 
-    control_node = Node(
-        package="controller_manager",
-        executable="ros2_control_node",
-        output="both",
-        parameters=[robot_description, robot_controllers],
-    )
     robot_state_pub_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
@@ -174,14 +130,14 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             [PathJoinSubstitution([FindPackageShare('ros_gz_sim'), 'launch', 'gz_sim.launch.py'])]
         ),
-        launch_arguments={"gz_args": " -r -v 4 empty.sdf"}.items(),
+        launch_arguments={"gz_args": "-r"}.items(),
     )
 
     spawn_entity = Node(
         package="ros_gz_sim",
         executable="create",
         name="spawn_robot",
-        arguments=["-topic", "robot_description", "-name", "A-2085-06"],
+        arguments=["-topic", "robot_description", "-name", LaunchConfiguration("hebi_arm")],
         output="screen",
     )
 
@@ -216,7 +172,7 @@ def generate_launch_description():
     # Delay loading and activation of `joint_state_broadcaster` after start of ros2_control_node
     delay_joint_state_broadcaster_spawner_after_ros2_control_node = RegisterEventHandler(
         event_handler=OnProcessStart(
-            target_action=control_node,
+            target_action=spawn_entity,
             on_start=[
                 TimerAction(
                     period=5.0,
@@ -258,7 +214,6 @@ def generate_launch_description():
         declared_arguments +
         default_arguments +
         [
-            control_node,
             robot_state_pub_node,
             rviz_node,
             gazebo,
