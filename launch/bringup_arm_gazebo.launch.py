@@ -115,7 +115,7 @@ def generate_launch_description():
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
-        parameters=[robot_description],
+        parameters=[robot_description, {"use_sim_time": True}],
     )
     rviz_node = Node(
         condition=IfCondition(LaunchConfiguration("use_rviz")),
@@ -145,6 +145,13 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+    )
+
+    gz_bridge_node = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'],
+        output="screen",
     )
 
     robot_controller_names = [robot_controller]
@@ -218,6 +225,7 @@ def generate_launch_description():
             rviz_node,
             gazebo,
             spawn_entity,
+            gz_bridge_node,
             delay_joint_state_broadcaster_spawner_after_ros2_control_node,
         ]
         + delay_robot_controller_spawners_after_joint_state_broadcaster_spawner
