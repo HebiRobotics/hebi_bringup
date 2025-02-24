@@ -14,8 +14,7 @@ hebi_arm_controller:
       - J1_base
       - J2_shoulder
       - J3_elbow
-      - J4_wrist1
-      - J5_wrist2
+      - J4_wrist
     
     command_interfaces:
       - position
