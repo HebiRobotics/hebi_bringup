@@ -17,11 +17,11 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, RegisterEventHandler, TimerAction, LogInfo, SetLaunchConfiguration
 from launch.event_handlers import OnProcessExit, OnProcessStart
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, PythonExpression
+from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, PythonExpression, EqualsSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
-from launch.conditions import LaunchConfigurationEquals
+from launch.conditions import IfCondition
 
 
 def generate_launch_description():
@@ -42,7 +42,7 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "runtime_config_package",
+            "controllers_package",
             default_value="hebi_bringup",
             description='Package with the controller\'s configuration in "config" folder. \
         Usually the argument is not set, it enables use of a custom setup.',
@@ -95,44 +95,23 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "families",
-            default_value="Arm",
-            description="List of families of HEBI components to connect to",
+            "use_rviz",
+            default_value="true",
+            description="Whether to start RViz.",
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "names",
-            default_value="J1_base;J2_shoulder;J3_elbow;J4_wrist1;J5_wrist2;J6_wrist3",
-            description="List of names of HEBI components to connect to",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "hrdf_pkg",
+            "config_pkg",
             default_value="hebi_description",
-            description="Package with the robot's HRDF file.",
+            description="Package with the robot's config file.",
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "hrdf_file_path",
+            "config_file_path",
             default_value="None", # Default set later using the hebi arm name
-            description="Path to the robot's HRDF file relative to the package",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "gains_pkg",
-            default_value="hebi_description",
-            description="Package with the robot's gains file.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "gains_file_path",
-            default_value="None", # Default set later using the hebi arm name
-            description="Path to the robot's gains file relative to the package",
+            description="Path to the robot's config file relative to the package",
         )
     )
 
@@ -141,75 +120,69 @@ def generate_launch_description():
     default_arguments.append(
         LogInfo(
             msg=PythonExpression(['"Using default controllers_file: ', LaunchConfiguration("hebi_arm"), '_controllers.yaml"']),
-            condition=LaunchConfigurationEquals("controllers_file", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("controllers_file"), "None")
+            )
         )
     )
     default_arguments.append(
         SetLaunchConfiguration(
             name="controllers_file",
             value=PythonExpression(['"', LaunchConfiguration("hebi_arm"), '_controllers.yaml"']),
-            condition=LaunchConfigurationEquals("controllers_file", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("controllers_file"), "None")
+            )
         )
     )
 
     default_arguments.append(
         LogInfo(
             msg=PythonExpression(['"Using default description_file: ', LaunchConfiguration("hebi_arm"), '.urdf.xacro"']),
-            condition=LaunchConfigurationEquals("description_file", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("description_file"), "None")
+            )
         )
     )
     default_arguments.append(
         SetLaunchConfiguration(
             name="description_file",
             value=PythonExpression(['"', LaunchConfiguration("hebi_arm"), '.urdf.xacro"']),
-            condition=LaunchConfigurationEquals("description_file", "None")
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("description_file"), "None")
+            )
         )
     )
 
     default_arguments.append(
         LogInfo(
-            msg=PythonExpression(['"Using default hrdf_file_path: config/hrdf/', LaunchConfiguration("hebi_arm"), '.hrdf"']),
-            condition=LaunchConfigurationEquals("hrdf_file_path", "None")
+            msg=PythonExpression(['"Using default config_file_path: config/arms/', LaunchConfiguration("hebi_arm"), '.cfg.yaml"']),
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("config_file_path"), "None")
+            )
         )
     )
     default_arguments.append(
         SetLaunchConfiguration(
-            name="hrdf_file_path",
-            value=PythonExpression(['"config/hrdf/', LaunchConfiguration("hebi_arm"), '.hrdf"']),
-            condition=LaunchConfigurationEquals("hrdf_file_path", "None")
-        )
-    )
-
-    default_arguments.append(
-        LogInfo(
-            msg=PythonExpression(['"Using default gains_file_path: config/gains/', LaunchConfiguration("hebi_arm"), '_gains.xml"']),
-            condition=LaunchConfigurationEquals("gains_file_path", "None")
-        )
-    )
-    default_arguments.append(
-        SetLaunchConfiguration(
-            name="gains_file_path",
-            value=PythonExpression(['"config/gains/', LaunchConfiguration("hebi_arm"), '_gains.xml"']),
-            condition=LaunchConfigurationEquals("gains_file_path", "None")
+            name="config_file_path",
+            value=PythonExpression(['"config/arms/', LaunchConfiguration("hebi_arm"), '.cfg.yaml"']),
+            condition=IfCondition(
+                EqualsSubstitution(LaunchConfiguration("config_file_path"), "None")
+            )
         )
     )
 
 
     # Initialize Arguments
     prefix = LaunchConfiguration("prefix")
-    runtime_config_package = LaunchConfiguration("runtime_config_package")
+    controllers_package = LaunchConfiguration("controllers_package")
     controllers_file = LaunchConfiguration("controllers_file")
     description_package = LaunchConfiguration("description_package")
     description_file = LaunchConfiguration("description_file")
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
     mock_sensor_commands = LaunchConfiguration("mock_sensor_commands")
     robot_controller = LaunchConfiguration("robot_controller")
-    families = LaunchConfiguration("families")
-    names = LaunchConfiguration("names")
-    hrdf_pkg = LaunchConfiguration("hrdf_pkg")
-    hrdf_file_path = LaunchConfiguration("hrdf_file_path")
-    gains_pkg = LaunchConfiguration("gains_pkg")
-    gains_file_path = LaunchConfiguration("gains_file_path")
+    config_pkg = LaunchConfiguration("config_pkg")
+    config_file_path = LaunchConfiguration("config_file_path")
 
     # Get URDF via xacro
     robot_description_content = Command(
@@ -229,32 +202,18 @@ def generate_launch_description():
             "mock_sensor_commands:=",
             mock_sensor_commands,
             " ",
-            "families:=",
-            families,
+            "config_pkg:=",
+            config_pkg,
             " ",
-            "names:=",
-            names,
-            " ",
-            "hrdf_pkg:=",
-            hrdf_pkg,
-            " ",
-            "hrdf_file:=",
-            hrdf_file_path,
-            " ",
-            "gains_pkg:=",
-            gains_pkg,
-            " ",
-            "gains_file:=",
-            gains_file_path,
-            " ",
-            "home_position:=\"0.0;2.09;2.09;0.0;1.57;0.0\"" # HEBI hardware interface ignores extra joints if unnecessary
+            "config_file:=",
+            config_file_path
         ]
     )
 
     robot_description = {"robot_description": robot_description_content}
 
     robot_controllers = PathJoinSubstitution(
-        [FindPackageShare(runtime_config_package), "config", controllers_file]
+        [FindPackageShare(controllers_package), "config", controllers_file]
     )
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare(description_package), "rviz", "hebi_arm.rviz"]
@@ -273,6 +232,7 @@ def generate_launch_description():
         parameters=[robot_description],
     )
     rviz_node = Node(
+        condition=IfCondition(LaunchConfiguration("use_rviz")),
         package="rviz2",
         executable="rviz2",
         name="rviz2",
