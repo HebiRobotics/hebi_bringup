@@ -223,7 +223,7 @@ def generate_launch_description():
         [FindPackageShare(controllers_package), "config", controllers_file]
     )
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare(description_package), "rviz", "hebi_arm.rviz"]
+        [FindPackageShare(description_package), "rviz", "hebi.rviz"]
     )
 
     control_node = Node(
