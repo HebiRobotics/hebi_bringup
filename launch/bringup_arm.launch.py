@@ -95,6 +95,13 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            "use_gripper",
+            default_value="false",
+            description="Set to true if the robot has a gripper controller to load.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "use_rviz",
             default_value="true",
             description="Whether to start RViz.",
@@ -256,6 +263,17 @@ def generate_launch_description():
                 arguments=[controller, "-c", "/controller_manager"],
             )
         ]
+
+    # Gripper controller spawner
+    # This is only loaded if the use_gripper argument is set to true
+    robot_controller_spawners = [
+        Node(
+            package="controller_manager",
+            executable="spawner",
+            arguments=["gripper_controller", "-c", "/controller_manager"],
+            condition=LaunchConfigurationEquals("use_gripper", "true"),
+        )
+    ]
 
     inactive_robot_controller_names = []
     inactive_robot_controller_spawners = []
