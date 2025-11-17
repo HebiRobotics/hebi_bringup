@@ -254,7 +254,7 @@ def generate_launch_description():
 
     # Gripper controller spawner
     # This is only loaded if the use_gripper argument is set to true
-    robot_controller_spawners = [
+    robot_controller_spawners += [
         Node(
             package="controller_manager",
             executable="spawner",
