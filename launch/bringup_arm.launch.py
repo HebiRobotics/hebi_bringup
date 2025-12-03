@@ -87,17 +87,21 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "robot_controller",
-            default_value="hebi_arm_controller",
-            choices=["hebi_arm_controller"],
-            description="Robot controller to start.",
+            "use_gripper",
+            default_value="false",
+            description="Set to true if the robot has a gripper controller to load.",
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "use_gripper",
-            default_value="false",
-            description="Set to true if the robot has a gripper controller to load.",
+            "robot_controller",
+            default_value=PythonExpression([
+                "'hebi_arm_with_gripper_controller' if '",
+                LaunchConfiguration("use_gripper"),
+                "' == 'true' else 'hebi_arm_controller'"
+            ]),
+            choices=["hebi_arm_controller", "hebi_arm_with_gripper_controller"],
+            description="Robot controller to start.",
         )
     )
     declared_arguments.append(
@@ -265,13 +269,20 @@ def generate_launch_description():
         ]
 
     # Gripper controller spawner
-    # This is only loaded if the use_gripper argument is set to true
-    robot_controller_spawners = [
+    # This is only loaded when:
+    # 1. use_gripper is true AND
+    # 2. robot_controller is hebi_arm_controller (not hebi_arm_with_gripper_controller)
+    robot_controller_spawners += [
         Node(
             package="controller_manager",
             executable="spawner",
             arguments=["gripper_controller", "-c", "/controller_manager"],
-            condition=LaunchConfigurationEquals("use_gripper", "true"),
+            condition=IfCondition(
+                PythonExpression([
+                    "'", LaunchConfiguration("use_gripper"), "' == 'true' and '",
+                    LaunchConfiguration("robot_controller"), "' == 'hebi_arm_controller'"
+                ])
+            ),
         )
     ]
 
