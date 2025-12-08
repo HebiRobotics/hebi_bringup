@@ -26,7 +26,7 @@ def generate_launch_description():
     # config file argument
     config_file_arg = DeclareLaunchArgument(
         "config_file",
-        default_value="test_goal_publishers_config.yaml",
+        default_value="test_hebi_arm_controller.yaml",
         description="Name of the config file to use for the test.",
     )
 

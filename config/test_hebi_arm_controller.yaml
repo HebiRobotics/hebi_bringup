@@ -1,6 +1,6 @@
 publisher_joint_trajectory_controller:
   ros__parameters:
-    # This is a yaml file that contains the parameters for the test_goal_publisher node 
+    # This is a yaml file that contains the parameters for the test_joint_trajectory_controller node 
     # Currently, it is made for 6-DOF HEBI arm
     # You can change the parameters to match your robot's configuration
 
