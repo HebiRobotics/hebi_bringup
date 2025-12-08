@@ -9,9 +9,9 @@
   <maintainer email="chris@hebirobotics.com">Chris Bollinger</maintainer>
   <maintainer email="hariharan@hebirobotics.com">Hariharan Ravichandran</maintainer>
 
-  <author email="hariharan@hebirobotics.com">Hariharan Ravichandran</author>
-  
   <license>Apache License 2.0</license>
+
+  <author email="hariharan@hebirobotics.com">Hariharan Ravichandran</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
@@ -20,10 +20,12 @@
   <exec_depend>forward_command_controller</exec_depend>
   <exec_depend>joint_state_broadcaster</exec_depend>
   <exec_depend>joint_trajectory_controller</exec_depend>
-  <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>ros2_control</exec_depend>
   <exec_depend>ros2_controllers</exec_depend>
   <exec_depend>gripper_controllers</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>ros2_control</exec_depend>
+  <exec_depend>ros2_controllers</exec_depend>
   <exec_depend>ros2_controllers_test_nodes</exec_depend>
   <exec_depend>rviz2</exec_depend>
   <exec_depend>xacro</exec_depend>
