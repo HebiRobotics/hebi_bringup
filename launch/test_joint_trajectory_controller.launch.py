@@ -16,49 +16,28 @@
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import PathJoinSubstitution, LaunchConfiguration, PythonExpression
+from launch.substitutions import PathJoinSubstitution, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
 
-    # controller type argument
-    controller_type_arg = DeclareLaunchArgument(
-        "controller_type",
-        default_value="hebi_arm_controller",
-        choices=["hebi_arm_controller", "hebi_arm_with_gripper_controller"],
-        description="Type of controller to test (determines which config file to use).",
-    )
-
     # config file argument
     config_file_arg = DeclareLaunchArgument(
         "config_file",
         default_value="test_hebi_arm_controller.yaml",
-        description="Name of the config file to use for the test. Overrides controller_type if specified.",
+        description="Name of the config file to use for the test.",
     )
 
-    controller_type = LaunchConfiguration("controller_type")
     config_file = LaunchConfiguration("config_file")
 
-    # Determine config file based on controller_type if config_file is at default value
-    resolved_config_file = PythonExpression([
-        "'test_hebi_arm_with_gripper_controller.yaml' if '",
-        controller_type,
-        "' == 'hebi_arm_with_gripper_controller' and '",
-        config_file,
-        "' == 'test_hebi_arm_controller.yaml' else '",
-        config_file,
-        "'"
-    ])
-
     position_goals = PathJoinSubstitution(
-        [FindPackageShare("hebi_bringup"), "config", resolved_config_file]
+        [FindPackageShare("hebi_bringup"), "config", config_file]
     )
 
     return LaunchDescription(
         [
-            controller_type_arg,
             config_file_arg,
             Node(
                 package="ros2_controllers_test_nodes",
